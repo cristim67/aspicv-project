@@ -5,5 +5,4 @@ class Settings:
     STORAGE_DIR = "models"
     TEST_START_ID = 2701
     TEST_END_ID = 3000
-    FEATURE_TYPES = ['hog', 'lbp', 'raw']
-
+    FEATURE_TYPES = ["hog", "lbp", "raw"]
