@@ -5,3 +5,5 @@ scikit-learn==1.7.2
 scikit-image==0.25.2
 tqdm==4.67.1
 joblib==1.5.2
+isort==5.13.2
+black==25.1.0

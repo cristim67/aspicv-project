@@ -43,6 +43,35 @@ aspicv-project/
 pip install -r requirements.txt
 ```
 
+### Development Setup
+
+Pentru dezvoltare, instalați și dependențele de development:
+```bash
+pip install -r requirements-dev.txt
+```
+
+Apoi configurați pre-commit hooks:
+```bash
+pre-commit install
+```
+
+Acest lucru va instala automat hook-urile care vor rula la fiecare commit:
+- **isort**: sortează importurile
+- **mypy**: verifică tipurile (type checking)
+- **pre-commit-hooks**: verificări generale (trailing whitespace, end-of-file, etc.)
+
+Pentru a rula manual verificările:
+```bash
+# Sortează importurile
+isort .
+
+# Verifică tipurile
+mypy src/ utils/ app.py
+
+# Rulează toate hook-urile manual
+pre-commit run --all-files
+```
+
 ## Utilizare
 
 ### Antrenare și predicție completă
