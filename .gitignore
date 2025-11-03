@@ -209,3 +209,15 @@ __marimo__/
 tags/  
 dataset/    
 .DS_Store
+
+# Logs
+logs/
+*.log
+
+# Model files
+*.pkl
+*.joblib
+models/
+
+# Submission files
+submission.csv
