@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Tuple, cast
+from typing import cast
 
 import cv2
 import numpy as np
@@ -18,7 +18,7 @@ class ImageRepository:
     def __init__(self, dataset_path: str):
         self.dataset_path = dataset_path
 
-    async def _load_image(self, img_path: str) -> Optional[np.ndarray]:
+    async def _load_image(self, img_path: str) -> np.ndarray | None:
         """Load and preprocess a single image asynchronously."""
         if not Path(img_path).exists():
             return None
@@ -34,16 +34,16 @@ class ImageRepository:
         return img.astype(np.float32) / 255.0
 
     async def _load_image_with_info(
-        self, img_id: int, label: Optional[str] = None
-    ) -> Tuple[int, Optional[np.ndarray], Optional[str]]:
+        self, img_id: int, label: str | None = None
+    ) -> tuple[int, np.ndarray | None, str | None]:
         """Load image with ID and optional label."""
         img_path = os.path.join(self.dataset_path, f"{img_id}.jpg")
         img = await self._load_image(img_path)
         return img_id, img, label
 
     async def load_training_data(
-        self, csv_path: str, max_images: Optional[int] = None
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self, csv_path: str, max_images: int | None = None
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         logger.info(f"Loading images from {csv_path}")
 
         # Read CSV in thread pool
@@ -71,7 +71,7 @@ class ImageRepository:
                     logger.warning(f"Failed to load image: {result}")
                 else:
                     img_id, img, label = cast(
-                        Tuple[int, Optional[np.ndarray], Optional[str]], result
+                        tuple[int, np.ndarray | None, str | None], result
                     )
                     if img is not None:
                         images.append(img)
@@ -90,7 +90,7 @@ class ImageRepository:
 
     async def load_test_data(
         self, start_id: int = 2701, end_id: int = 3000
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         logger.info(f"Loading test images from {start_id} to {end_id}")
 
         # Create tasks for parallel image loading
@@ -110,7 +110,7 @@ class ImageRepository:
                     logger.warning(f"Failed to load image: {result}")
                 else:
                     img_id, img, _ = cast(
-                        Tuple[int, Optional[np.ndarray], Optional[str]], result
+                        tuple[int, np.ndarray | None, str | None], result
                     )
                     if img is not None:
                         images.append(img)

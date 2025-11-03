@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Tuple
 
 import numpy as np
 
@@ -19,7 +18,7 @@ class TrainingService:
 
     async def train(
         self, train_csv: str, use_cache: bool = True
-    ) -> Tuple[EmotionClassifier, FeatureExtractor]:
+    ) -> tuple[EmotionClassifier, FeatureExtractor]:
         logger.info("=" * 60)
         logger.info("Facial Expression Recognition System")
         logger.info(f"Cache: {'ON' if use_cache else 'OFF'}")

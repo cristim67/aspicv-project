@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,7 @@ class PredictionService:
         feature_extractor: FeatureExtractor,
         start_id: int = 2701,
         end_id: int = 3000,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         logger.info("[4/5] Predicting test images...")
         test_images, test_ids = await self.repo.load_test_data(start_id, end_id)
         logger.info(f"Loaded {len(test_images)} test images")

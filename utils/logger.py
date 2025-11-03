@@ -1,13 +1,12 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def setup_logger(
     name: str = "aspicv",
     log_level: int = logging.INFO,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
 ) -> logging.Logger:
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)

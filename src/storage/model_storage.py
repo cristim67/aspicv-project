@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Optional, Union, cast
+from typing import cast
 
 import joblib
 
@@ -23,7 +23,7 @@ class ModelStorage:
 
     async def load_feature_extractor(
         self, name: str = "feature_extractor"
-    ) -> Optional[FeatureExtractor]:
+    ) -> FeatureExtractor | None:
         result = await self._load(name)
         return result if isinstance(result, FeatureExtractor) else None
 
@@ -34,16 +34,14 @@ class ModelStorage:
 
     async def load_classifier(
         self, name: str = "classifier"
-    ) -> Optional[EmotionClassifier]:
+    ) -> EmotionClassifier | None:
         result = await self._load(name)
         return result if isinstance(result, EmotionClassifier) else None
 
     def exists(self, name: str = "classifier") -> bool:
         return (self.storage_dir / f"{name}.joblib").exists()
 
-    async def _save(
-        self, obj: Union[FeatureExtractor, EmotionClassifier], name: str
-    ) -> bool:
+    async def _save(self, obj: FeatureExtractor | EmotionClassifier, name: str) -> bool:
         filepath = self.storage_dir / f"{name}.joblib"
         try:
             await asyncio.to_thread(joblib.dump, obj, filepath)
@@ -53,9 +51,7 @@ class ModelStorage:
             logger.error(f"Failed to save {name}: {e}", exc_info=True)
             return False
 
-    async def _load(
-        self, name: str
-    ) -> Optional[Union[FeatureExtractor, EmotionClassifier]]:
+    async def _load(self, name: str) -> FeatureExtractor | EmotionClassifier | None:
         filepath = self.storage_dir / f"{name}.joblib"
         absolute_path = filepath.resolve()
 
@@ -66,7 +62,7 @@ class ModelStorage:
         try:
             obj = await asyncio.to_thread(joblib.load, filepath)
             logger.info(f"Loaded {name} from {absolute_path}")
-            return cast(Union[FeatureExtractor, EmotionClassifier], obj)
+            return cast(FeatureExtractor | EmotionClassifier, obj)
         except Exception as e:
             logger.error(
                 f"Failed to load {name} from {absolute_path}: {e}", exc_info=True

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List, Optional
 
 import numpy as np
 from sklearn.preprocessing import RobustScaler
@@ -31,7 +30,7 @@ def _normalize_features(X: np.ndarray) -> np.ndarray:
 
 
 class FeatureExtractor:
-    def __init__(self, feature_types: Optional[List[str]] = None) -> None:
+    def __init__(self, feature_types: list[str] | None = None) -> None:
         if feature_types is None:
             feature_types = ["hog", "lbp", "raw"]
         self.feature_types = feature_types
