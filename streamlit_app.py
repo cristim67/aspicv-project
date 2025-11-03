@@ -36,7 +36,7 @@ MAX_DISPLAY_HEIGHT = 500
 MIN_DISPLAY_SIZE = 300
 
 
-@st.cache_resource  # type: ignore
+@st.cache_resource  # type: ignore[misc]
 def load_models() -> tuple[EmotionClassifier | None, FeatureExtractor | None]:
     """Load trained models with async event loop handling."""
     storage = ModelStorage(Settings.STORAGE_DIR)
@@ -60,12 +60,12 @@ def load_models() -> tuple[EmotionClassifier | None, FeatureExtractor | None]:
         return None, None
 
 
-@st.cache_resource  # type: ignore
+@st.cache_resource  # type: ignore[misc]
 def load_image_repository() -> ImageRepository:
     return ImageRepository(Settings.DATASET_PATH)
 
 
-@st.cache_data(ttl=3600)  # type: ignore
+@st.cache_data(ttl=3600)  # type: ignore[misc]
 def load_image_by_id_sync(
     image_id: int,
 ) -> tuple[np.ndarray | None, Image.Image | None]:

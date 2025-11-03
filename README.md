@@ -1,122 +1,157 @@
 # Facial Expression Recognition System
 
-Sistem de recunoaștere a expresiilor faciale pentru proiectul ASPICV.
+Facial expression recognition system for the ASPICV project.
 
-## Descriere
+## Description
 
-Acest sistem utilizează metode multiple de extragere a caracteristicilor (HOG, LBP, raw pixels) și algoritmi de clasificare (SVM, MLP, Random Forest) pentru a recunoaște expresiile faciale din imagini alb-negru de 48×48 pixeli.
+This system uses multiple feature extraction methods (HOG, LBP, raw pixels) and classification algorithms (SVM, MLP, Random Forest) to recognize facial expressions from 48×48 pixel grayscale images.
 
-### Emoții recunoscute
-- happy (fericit)
-- sad (trist)
-- angry (furios)
+### Recognized Emotions
+- happy
+- sad
+- angry
 - neutral
-- fear (frică)
-- surprise (surpriză)
-- disgust (dezgust)
+- fear
+- surprise
+- disgust
 
-## Structura proiectului
+## Project Structure
 
 ```
 aspicv-project/
-├── src/                      # Cod sursă principal
+├── src/                      # Main source code
 │   ├── __init__.py
-│   ├── main.py              # Script principal
-│   ├── data_loader.py       # Încărcare date
-│   ├── feature_extraction.py # Extragere caracteristici
-│   └── classifier.py        # Modele de clasificare
-├── utils/                    # Utilitare
+│   ├── config/              # Configuration
+│   │   ├── __init__.py
+│   │   └── settings.py      # Settings (paths, IDs, etc.)
+│   ├── features/            # Feature extraction
+│   │   ├── __init__.py
+│   │   └── feature_extractor.py
+│   ├── models/             # Classification models
+│   │   ├── __init__.py
+│   │   └── emotion_classifier.py
+│   ├── repository/         # Data access
+│   │   ├── __init__.py
+│   │   └── image_repository.py
+│   ├── services/           # Business logic services
+│   │   ├── __init__.py
+│   │   ├── training_service.py
+│   │   └── prediction_service.py
+│   └── storage/            # Model persistence
+│       ├── __init__.py
+│       └── model_storage.py
+├── utils/                  # Utilities
 │   ├── __init__.py
-│   └── logger.py            # Configurare logging
-├── dataset/                  # Imagini (48×48 pixeli, 1.jpg - 3000.jpg)
+│   └── logger.py           # Logging configuration
+├── dataset/                # Images (48×48 pixels, 1.jpg - 3000.jpg)
 ├── tags/
-│   └── train.csv            # Etichete pentru imagini 1-2700
-├── logs/                     # Loguri (generat automat)
-├── requirements.txt          # Dependențe Python
-└── README.md                # Acest fișier
+│   └── train.csv           # Labels for images 1-2700
+├── models/                 # Trained models (auto-generated)
+│   ├── classifier.joblib
+│   └── feature_extractor.joblib
+├── logs/                   # Logs (auto-generated)
+│   └── training.log
+├── app.py                  # CLI script for training and prediction
+├── streamlit_app.py        # Interactive web application
+├── requirements.txt        # Python dependencies
+├── mypy.ini                # Type checking configuration
+├── .pre-commit-config.yaml # Pre-commit hooks configuration
+└── README.md               # This file
 ```
 
-## Instalare
+## Installation
 
-1. Instalați dependențele:
+1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
-### Development Setup
-
-Pentru dezvoltare, instalați și dependențele de development:
-```bash
-pip install -r requirements-dev.txt
-```
-
-Apoi configurați pre-commit hooks:
+2. Configure pre-commit hooks:
 ```bash
 pre-commit install
 ```
 
-Acest lucru va instala automat hook-urile care vor rula la fiecare commit:
-- **isort**: sortează importurile
-- **mypy**: verifică tipurile (type checking)
-- **pre-commit-hooks**: verificări generale (trailing whitespace, end-of-file, etc.)
+This will automatically install hooks that run on each commit:
+- **isort**: sorts imports
+- **mypy**: type checking
+- **pre-commit-hooks**: general checks (trailing whitespace, end-of-file, etc.)
 
-Pentru a rula manual verificările:
-```bash
-# Sortează importurile
-isort .
+## Usage
 
-# Verifică tipurile
-mypy src/ utils/ app.py
+### 1. Training and Full Prediction (CLI)
 
-# Rulează toate hook-urile manual
-pre-commit run --all-files
-```
-
-## Utilizare
-
-### Antrenare și predicție completă
-
-Pentru a antrena modelul pe setul de antrenare complet și a genera predicțiile pentru test:
+To train the model on the complete training set and generate predictions for the test set:
 
 ```bash
-python src/main.py
+python3 app.py
 ```
 
-Scriptul va:
-1. Încărca imaginile de antrenare (1-2700)
-2. Extrage caracteristici (HOG, LBP, raw pixels)
-3. Antrenează un ensemble de clasificatori (SVM + MLP + Random Forest)
-4. Generează predicții pentru imagini de test (2701-3000)
-5. Creează fișierul `submission.csv`
+The script will:
+1. Load training images (1-2700)
+2. Extract features (HOG, LBP, raw pixels)
+3. Train an ensemble of classifiers (SVM + MLP + Random Forest)
+4. Generate predictions for test images (2701-3000)
+5. Create the `submission.csv` file
 
-### Caching (Cache pentru modele)
+#### Caching (Model Cache)
 
-Sistemul suportă caching automat pentru a evita re-antrenarea:
-- **Prima rulare**: antrenează și salvează modelul în `models/`
-- **Rulări ulterioare**: încarcă modelul din cache (mult mai rapid!)
+The system supports automatic caching to avoid re-training:
+- **First run**: trains and saves the model in `models/`
+- **Subsequent runs**: loads the model from cache (much faster!)
 
 ```bash
-# Cu cache (implicit)
-python src/main.py
+# With cache (default)
+python3 app.py
 
-# Fără cache (forțează re-antrenare)
-python src/main.py --no-cache
+# Without cache (force re-training)
+python3 app.py --no-cache
 ```
 
-Modelele sunt salvate în folderul `models/`:
-- `models/feature_extractor.joblib` - extractorul de caracteristici cu scaler
-- `models/classifier.joblib` - modelul antrenat
+Models are saved in the `models/` folder:
+- `models/feature_extractor.joblib` - feature extractor with scaler
+- `models/classifier.joblib` - trained model
 
-### Validare (opțional)
+### 2. Interactive Web Application (Streamlit)
 
-Pentru a testa modelul pe o parte din datele de antrenare, modificați în `src/main.py`:
-```python
-USE_VALIDATION = True  # La linia 45
+To use the interactive web interface for real-time predictions:
+
+```bash
+streamlit run streamlit_app.py
 ```
 
-## Rezultate
+The application will run at `http://localhost:8501` and provides:
 
-Fișierul `submission.csv` va avea formatul:
+#### Features:
+- **Upload Image**: Upload a local image for prediction
+- **Load from Dataset**: Select an image from the training/test dataset by ID
+- **Automatic Prediction**: Results are displayed automatically when an image is loaded
+- **Detailed Visualization**:
+  - Predicted emotion with icon
+  - Confidence scores chart for all emotions
+  - Detailed probabilities for each emotion
+
+#### Characteristics:
+- **Auto-load**: On startup, automatically loads the first image from the dataset
+- **Auto-predict**: Prediction runs automatically when an image is loaded
+- **Smart Caching**: Models and images are cached for optimal performance
+- **Responsive Layout**: Interface optimized for different screen sizes
+
+#### Note:
+Make sure models have been trained (run `python3 app.py` at least once) before using the Streamlit application.
+
+## Architecture
+
+The system is organized in clear layers:
+
+- **Repository Layer** (`src/repository/`): Data access, image loading
+- **Feature Layer** (`src/features/`): Feature extraction (HOG, LBP, raw)
+- **Model Layer** (`src/models/`): Emotion classifiers
+- **Service Layer** (`src/services/`): Business logic (training, prediction)
+- **Storage Layer** (`src/storage/`): Model persistence (save/load)
+
+## Results
+
+The `submission.csv` file will have the format:
 ```csv
 id,label
 2701,happy
@@ -125,28 +160,32 @@ id,label
 3000,neutral
 ```
 
-## Dependențe principale
+## Main Dependencies
 
-- `numpy` - Calcule numerice
-- `pandas` - Manipulare date
-- `opencv-python` - Procesare imagini
-- `scikit-learn` - Machine learning
-- `scikit-image` - Extragere caracteristici (HOG, LBP)
+- `numpy` - Numerical computations
+- `pandas` - Data manipulation
+- `opencv-python` - Image processing
+- `scikit-learn` - Machine learning (SVM, MLP, Random Forest)
+- `scikit-image` - Feature extraction (HOG, LBP)
+- `streamlit` - Interactive web application
 - `tqdm` - Progress bars
+- `joblib` - Model serialization
 
 ## Logging
 
-Logurile sunt salvate în:
+Logs are saved in:
 - Console (stdout)
-- Fișier: `logs/training.log`
+- File: `logs/training.log`
 
-Nivelul de logging poate fi modificat în `src/main.py`:
+The logging level can be modified in `app.py`:
 ```python
 logger = setup_logger(name="aspicv", log_level=logging.INFO, ...)
 ```
 
-## Note
+## Notes
 
-- Imagile trebuie să fie în folderul `dataset/`
-- Fișierul `tags/train.csv` trebuie să existe
-- Setul de test este format din imaginile 2701-3000 (300 imagini)
+- Images must be in the `dataset/` folder
+- The `tags/train.csv` file must exist
+- The test set consists of images 2701-3000 (300 images)
+- Trained models are saved in `models/` for reuse
+- The Streamlit application requires trained models to function
