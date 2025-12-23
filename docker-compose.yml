@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:  # Runs the training script
+    build: .
+    container_name: emotion_backend
+    command: python app.py
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Check if GPU is available (optional, requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  frontend:  # Runs the Streamlit dashboard
+    build: .
+    container_name: emotion_frontend
+    command: streamlit run streamlit_app.py
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - backend

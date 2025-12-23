@@ -1,191 +1,129 @@
-# Facial Expression Recognition System
+# ASPICV Project - Facial Emotion Recognition
 
-Facial expression recognition system for the ASPICV project.
+## Overview
+This project implements a high-performance Facial Emotion Recognition (FER) system using a dataset of 3,000 grayscale images (48x48 pixels).
 
-## Description
+The dataset consists of:
+*   **3,000 Total Images**: Numbered `1.jpg` to `3000.jpg`.
+*   **2,700 Training Images**: Labeled in `train.csv`.
+*   **300 Test Images**: The target set for our predictions.
 
-This system uses multiple feature extraction methods (HOG, LBP, raw pixels) and classification algorithms (SVM, MLP, Random Forest) to recognize facial expressions from 48×48 pixel grayscale images.
+### Data Structure
+The `train.csv` file contains:
+*   `id`: Image index (e.g., `1` for `1.jpg`).
+*   `label`: Emotion class (`happy`, `sad`, `angry`, `neutral`, `fear`, `surprise`, `disgust`).
 
-### Recognized Emotions
-- happy
-- sad
-- angry
-- neutral
-- fear
-- surprise
-- disgust
+## Project Objective
+The goal is to develop a robust system for facial expression classification. We chose a modern architecture based on **Vision Transformers (ViT)**, demonstrating the effectiveness of state-of-the-art models even on low-resolution imagery.
 
-## Project Structure
+## System Architecture & Workflow
 
-```
-aspicv-project/
-├── src/                      # Main source code
-│   ├── __init__.py
-│   ├── config/              # Configuration
-│   │   ├── __init__.py
-│   │   └── settings.py      # Settings (paths, IDs, etc.)
-│   ├── features/            # Feature extraction
-│   │   ├── __init__.py
-│   │   └── feature_extractor.py
-│   ├── models/             # Classification models
-│   │   ├── __init__.py
-│   │   └── emotion_classifier.py
-│   ├── repository/         # Data access
-│   │   ├── __init__.py
-│   │   └── image_repository.py
-│   ├── services/           # Business logic services
-│   │   ├── __init__.py
-│   │   ├── training_service.py
-│   │   └── prediction_service.py
-│   └── storage/            # Model persistence
-│       ├── __init__.py
-│       └── model_storage.py
-├── utils/                  # Utilities
-│   ├── __init__.py
-│   └── logger.py           # Logging configuration
-├── dataset/                # Images (48×48 pixels, 1.jpg - 3000.jpg)
-├── tags/
-│   └── train.csv           # Labels for images 1-2700
-├── models/                 # Trained models (auto-generated)
-│   ├── classifier.joblib
-│   └── feature_extractor.joblib
-├── logs/                   # Logs (auto-generated)
-│   └── training.log
-├── app.py                  # CLI script for training and prediction
-├── streamlit_app.py        # Interactive web application
-├── requirements.txt        # Python dependencies
-├── mypy.ini                # Type checking configuration
-├── .pre-commit-config.yaml # Pre-commit hooks configuration
-└── README.md               # This file
-```
+Below is the processing flow designed for this project:
 
-## Installation
+![Processing Flow](./img/flowchart.png)
 
-1. Install dependencies:
-```bash
-pip3 install -r requirements.txt
-```
+## Proposed Solution
 
-2. Configure pre-commit hooks:
-```bash
-pre-commit install
-```
+### Architecture
+We utilized the `google/vit-base-patch16-224` model, pre-trained on ImageNet-21k.
+*   **Why ViT?** Vision Transformers capture global relationships between image patches, making them highly effective at distinguishing subtle facial features compared to traditional CNNs with limited receptive fields.
+*   **Input Adaptation**: Original 48x48 images are upscaled to 224x224 to meet the transformer's input requirements.
+*   **Custom Classifier**: Replaced the original head with a custom linear layer adapted for our 7 emotion classes, using **Dropout (0.3)** for regularization.
 
-This will automatically install hooks that run on each commit:
-- **isort**: sorts imports
-- **mypy**: type checking
-- **pre-commit-hooks**: general checks (trailing whitespace, end-of-file, etc.)
+### Optimization & Advanced Techniques
+1.  **Data Augmentation (Mixup & Geometric)**:
+    *   Implemented **Mixup** (`alpha=0.4`) which blends pairs of images and their labels. This forces the model to learn linear interpolations between features, significantly improving robustness.
+    *   Geometric transforms: RandomHorizontalFlip, RandomRotation, and RandomAffine.
+2.  **Label Smoothing (0.1)**:
+    *   Prevents the model from becoming over-confident in incorrect predictions by distributing a small probability mass to non-target classes.
+3.  **Balanced Sampling**:
+    *   Used a `WeightedRandomSampler` to address class imbalance (e.g., the "disgust" class has very few samples), ensuring every training batch has a balanced distribution of emotions.
+4.  **Training Optimizations**:
+    *   **MPS Acceleration**: Fully utilizes Apple Silicone (M1/M2/M3) Metal Performance Shaders.
+    *   **Mixed Precision**: FP16 training for reduced memory usage and faster computation.
+    *   **Scheduler**: `ReduceLROnPlateau` automatically adjusts the learning rate when validation performance stalls.
+5.  **Test Time Augmentation (TTA)**:
+    *   During inference, each test image is processed multiple times (original, flipped, slightly zoomed). The model averages these predictions to produce a highly reliable final classification.
 
-## Usage
+---
 
-### 1. Training and Full Prediction (CLI)
+## Usage Instructions
 
-To train the model on the complete training set and generate predictions for the test set:
+### 1. Training & Prediction
+The main script `app.py` handles the entire pipeline: loading data, training, saving the model, and generating predictions.
 
 ```bash
 python3 app.py
 ```
 
-The script will:
-1. Load training images (1-2700)
-2. Extract features (HOG, LBP, raw pixels)
-3. Train an ensemble of classifiers (SVM + MLP + Random Forest)
-4. Generate predictions for test images (2701-3000)
-5. Create the `submission.csv` file
-
-#### Caching (Model Cache)
-
-The system supports automatic caching to avoid re-training:
-- **First run**: trains and saves the model in `models/`
-- **Subsequent runs**: loads the model from cache (much faster!)
-
-```bash
-# With cache (default)
-python3 app.py
-
-# Without cache (force re-training)
-python3 app.py --no-cache
-```
-
-Models are saved in the `models/` folder:
-- `models/feature_extractor.joblib` - feature extractor with scaler
-- `models/classifier.joblib` - trained model
-
-### 2. Interactive Web Application (Streamlit)
-
-To use the interactive web interface for real-time predictions:
+### 2. Interactive Visualization
+We built a Streamlit application to demonstrate the model in real-time and visualize prediction confidence.
 
 ```bash
 streamlit run streamlit_app.py
 ```
 
-The application will run at `http://localhost:8501` and provides:
+## Installation & Setup
 
-#### Features:
-- **Upload Image**: Upload a local image for prediction
-- **Load from Dataset**: Select an image from the training/test dataset by ID
-- **Automatic Prediction**: Results are displayed automatically when an image is loaded
-- **Detailed Visualization**:
-  - Predicted emotion with icon
-  - Confidence scores chart for all emotions
-  - Detailed probabilities for each emotion
+### Local Development
 
-#### Characteristics:
-- **Auto-load**: On startup, automatically loads the first image from the dataset
-- **Auto-predict**: Prediction runs automatically when an image is loaded
-- **Smart Caching**: Models and images are cached for optimal performance
-- **Responsive Layout**: Interface optimized for different screen sizes
+1.  **Clone the repository**:
+    ```bash
+    git clone <repository_url>
+    cd aspicv-project
+    ```
 
-#### Note:
-Make sure models have been trained (run `python3 app.py` at least once) before using the Streamlit application.
+2.  **Create a virtual environment**:
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    ```
 
-## Architecture
+3.  **Install dependencies**:
+    ```bash
+    pip3 install -r requirements.txt
+    ```
 
-The system is organized in clear layers:
+### Docker Usage
 
-- **Repository Layer** (`src/repository/`): Data access, image loading
-- **Feature Layer** (`src/features/`): Feature extraction (HOG, LBP, raw)
-- **Model Layer** (`src/models/`): Emotion classifiers
-- **Service Layer** (`src/services/`): Business logic (training, prediction)
-- **Storage Layer** (`src/storage/`): Model persistence (save/load)
+You can run the entire project using Docker Compose, without worrying about local dependencies.
 
-## Results
+1.  **Build and run**:
+    ```bash
+    docker-compose up --build
+    ```
+    This will start:
+    *   **`backend`** (ex-training): Runs the `app.py` script to train the model.
+    *   **`frontend`** (ex-dashboard): Starts the Streamlit app.
 
-The `submission.csv` file will have the format:
-```csv
-id,label
-2701,happy
-2702,angry
-...
-3000,neutral
+2.  **Access the Frontend**:
+    Open [http://localhost:8501](http://localhost:8501) in your browser.
+
+3.  **Run specific services**:
+    *   To run only the dashboard: `docker-compose up frontend`
+    *   To run only training: `docker-compose up backend`
+
+---
+
+## Project Structure
+
+```text
+aspicv-project/
+├── app.py                  # Main script (Training + Inference)
+├── streamlit_app.py        # Interactive Demo App
+├── config/
+│   └── settings.py         # Centralized Configuration
+├── utils/                  # Utilities
+├── dataset/                # Image Data
+├── models/                 # Saved Models (.pt)
+├── logs/                   # Training Logs
+├── submission.csv          # Challenge Output File
+└── README.md               # Project Documentation
 ```
 
-## Main Dependencies
-
-- `numpy` - Numerical computations
-- `pandas` - Data manipulation
-- `opencv-python` - Image processing
-- `scikit-learn` - Machine learning (SVM, MLP, Random Forest)
-- `scikit-image` - Feature extraction (HOG, LBP)
-- `streamlit` - Interactive web application
-- `tqdm` - Progress bars
-- `joblib` - Model serialization
-
-## Logging
-
-Logs are saved in:
-- Console (stdout)
-- File: `logs/training.log`
-
-The logging level can be modified in `app.py`:
-```python
-logger = setup_logger(name="aspicv", log_level=logging.INFO, ...)
-```
-
-## Notes
-
-- Images must be in the `dataset/` folder
-- The `tags/train.csv` file must exist
-- The test set consists of images 2701-3000 (300 images)
-- Trained models are saved in `models/` for reuse
-- The Streamlit application requires trained models to function
+## Dependencies
+*   Python 3.9+
+*   PyTorch, torchvision
+*   Transformers (Hugging Face)
+*   Pandas, NumPy, Pillow
+*   Streamlit, Tqdm, Scikit-learn
