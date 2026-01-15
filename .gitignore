@@ -219,7 +219,7 @@ __marimo__/
 models/
 
 # Submission files
-submission.csv
+# submission.csv
 submission_2.csv
 
 dataset
